@@ -4,8 +4,8 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp'
     id 'com.google.dagger.hilt.android'
-    // Add the Google services Gradle plugin
-    id 'com.google.gms.google-services'
+//    // Add the Google services Gradle plugin
+//    id 'com.google.gms.google-services'
 }
 android {
     namespace 'com.hanadulset.pro_poseapp.data'
@@ -23,7 +23,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation project(path: ':domain')
     implementation project(":utils")
-    implementation project(":opencv")
+    implementation project(':opencv')
+
     //hilt
     implementation "com.google.dagger:hilt-android:2.44"
     ksp "com.google.dagger:hilt-compiler:2.44"
@@ -42,16 +43,17 @@ dependencies {
     implementation 'com.opencsv:opencsv:4.4'
 
 
-    var firebase_version = "32.5.0"
-    // Import the Firebase BoM
-    implementation platform("com.google.firebase:firebase-bom:$firebase_version")
-    // When using the BoM, don't specify versions in Firebase dependencies
-    implementation 'com.google.firebase:firebase-analytics'
+//    var firebase_version = "32.5.0"
+//    // Import the Firebase BoM
+//    implementation platform("com.google.firebase:firebase-bom:$firebase_version")
+//    // When using the BoM, don't specify versions in Firebase dependencies
+//    implementation 'com.google.firebase:firebase-analytics'
     //Ktor
     var ktor_version = "2.3.3"
     implementation "io.ktor:ktor-client-cio:$ktor_version"
     implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-android:$ktor_version"
+
 //S3
     var aws_version = "2.13.5"
     implementation "com.amazonaws:aws-android-sdk-mobile-client:$aws_version"
@@ -70,5 +72,6 @@ dependencies {
 
     // To use Kotlin Symbol Processing (KSP)
     ksp "androidx.room:room-compiler:$room_version"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.2'
     implementation 'com.google.mlkit:pose-detection-accurate:18.0.0-beta3'
 }

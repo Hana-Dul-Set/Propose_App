@@ -2,15 +2,11 @@ package com.hanadulset.pro_poseapp.data.datasource
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.provider.Settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.google.firebase.Firebase
-import com.google.firebase.analytics.analytics
-import com.google.firebase.analytics.logEvent
 import com.hanadulset.pro_poseapp.data.datasource.interfaces.UserDataSource
 import com.hanadulset.pro_poseapp.utils.UserSet
 import kotlinx.coroutines.flow.first
@@ -23,10 +19,6 @@ import kotlinx.serialization.json.Json
 //기기 내의 사용자 설정 및 사용자의 로그를 정리하고 기록하는 데이터 소스
 @SuppressLint("HardwareIds")
 class UserDataSourceImpl constructor(private val applicationContext: Context) : UserDataSource {
-
-    private val deviceID: String by lazy {
-        Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID)
-    }
 
     override suspend fun saveUserSet(userSet: UserSet) {
         applicationContext.dataStore.edit { preferences ->

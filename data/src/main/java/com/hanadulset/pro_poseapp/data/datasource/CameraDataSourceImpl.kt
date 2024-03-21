@@ -1,12 +1,7 @@
 package com.hanadulset.pro_poseapp.data.datasource
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Context
-import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -30,9 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.opencv.android.OpenCVLoader
-import java.text.SimpleDateFormat
-import java.util.EnumSet
-import java.util.Locale
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
@@ -55,6 +47,7 @@ class CameraDataSourceImpl(private val context: Context) : CameraDataSource {
     private var cameraProvider: ProcessCameraProvider? = null
     private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
 
+
     override suspend fun initCamera(
         lifecycleOwner: LifecycleOwner,
         surfaceProvider: Preview.SurfaceProvider,
@@ -70,10 +63,8 @@ class CameraDataSourceImpl(private val context: Context) : CameraDataSource {
                     cameraProvider = cameraProviderFuture!!.get()
                 } catch (e: InterruptedException) {
                     cont.resume(CameraState(CAMERA_INIT_ERROR, e, e.message))
-//                    Log.e(this::class.java.name, "Error starting camera")
                 } catch (e: ExecutionException) {
                     cont.resume(CameraState(CAMERA_INIT_ERROR, e, e.message))
-//                    Log.e(this::class.java.name, "Error starting camera")
                 }
                 if (bindCameraUseCases(
                         surfaceProvider = surfaceProvider,
@@ -197,10 +188,6 @@ class CameraDataSourceImpl(private val context: Context) : CameraDataSource {
     fun unbindCameraResources(): Boolean {
         return try {
             cameraProvider!!.unbindAll()
-//            Log.d(
-//                "available cameras: ",
-//                cameraProvider!!.availableCameraInfos.map { it.cameraState.value }.toString()
-//            )
             true
         } catch (exc: Exception) {
             false

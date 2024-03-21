@@ -277,9 +277,7 @@ class CameraViewModel @Inject constructor(
         viewModelScope.launch {
             Log.d("따오기 이미지: ", uri.toString())
             deleteImageFromPicturesUseCase(uri)
-//            File(uri.toString()).delete()
         }
-
     }
 
 

@@ -150,8 +150,7 @@ object PermScreen {
                         )
                         Text(
                             text = "- 사진을 저장하기 위한 권한" +
-                                    "\n- 갤러리에서 사진을 볼 수 있는 권한" +
-                                    "\n- 다운로드 받은 리소스를 저장하는 권한",
+                                    "\n- 갤러리에서 사진을 볼 수 있는 권한",
                             style = TextStyle(
                                 fontSize = 12.sp,
                                 lineHeight = 20.sp,

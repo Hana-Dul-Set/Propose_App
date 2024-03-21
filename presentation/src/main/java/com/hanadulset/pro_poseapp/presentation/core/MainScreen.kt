@@ -76,8 +76,6 @@ import java.io.Serializable
 
 object MainScreen {
     enum class Page {
-//        ModelDownloadProgress,//모델 다운로드 화면
-//        ModelDownloadRequest, //모델 다운로드 요청 화면
         Perm, //권한 화면
         AppUseAgreement,//약관 동의 화면
         Cam, //카메라 화면
@@ -107,18 +105,12 @@ object MainScreen {
     fun MainScreen(
         modifier: Modifier = Modifier,
         navHostController: NavHostController,
-        cameraViewModel: CameraViewModel,
-        prepareServiceViewModel: PrepareServiceViewModel,
-        galleryViewModel: GalleryViewModel
     ) {
         Surface(
             modifier = modifier
         ) {
             ContainerView(
-                navController = navHostController,
-                cameraViewModel = cameraViewModel,
-                prepareServiceViewModel = prepareServiceViewModel,
-                galleryViewModel = galleryViewModel
+                navController = navHostController
             )
         }
     }
@@ -131,9 +123,9 @@ object MainScreen {
     @Composable
     private fun ContainerView(
         navController: NavHostController,
-        cameraViewModel: CameraViewModel,
-        prepareServiceViewModel: PrepareServiceViewModel,
-        galleryViewModel: GalleryViewModel
+        cameraViewModel: CameraViewModel = hiltViewModel(),
+        prepareServiceViewModel: PrepareServiceViewModel = hiltViewModel(),
+        galleryViewModel: GalleryViewModel = hiltViewModel()
     ) {
 
         val multiplePermissionsState =
@@ -152,23 +144,7 @@ object MainScreen {
                 previewRotation = previewView.value.rotation.toInt()
             )
         }
-//        navController.addOnDestinationChangedListener { _, destination, _ ->
-//            destination.route?.let { dest ->
-//                //로그
-//                val deviceID = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-//                Firebase.analytics.apply {
-//                    setUserId(deviceID)
-//                }.logEvent("EVENT_USER_DESTINATION") {
-//                    param("timeStamp", System.currentTimeMillis())
-//                    param("destination", dest)
-//                    param(
-//                        "deviceID",
-//                       deviceID
-//                    )
-//                }
-//            }
-//
-//        }
+
 
 
         NavHost(
@@ -252,15 +228,6 @@ object MainScreen {
                     })
             }
 
-
-//            relatedWithDownload(routeName = Graph.DownloadProcess.name,
-//                navHostController = navHostController,
-//                onDoneDownload = {
-//                    navHostController.navigate(Page.AppLoading.name + "?afterDownload=${true}") {
-//                        popUpTo(Page.AppLoading.name) {}
-//                    }
-//                })
-
         }
     }
 
@@ -283,11 +250,6 @@ object MainScreen {
                 previewState = previewState,
                 cameraInit = cameraInit,
             )
-//            relatedWithDownload(routeName = Graph.DownloadProcess.name,
-//                navHostController = navHostController,
-//                onDoneDownload = {
-//                    navHostController.navigate(Page.AppLoading.name + "?afterDownload=${true}") {}
-//                })
         }
 
 
@@ -485,7 +447,6 @@ object MainScreen {
                 it.sharedViewModel<PrepareServiceViewModel>(navHostController = navHostController)
             val totalLoadedState = prepareServiceViewModel.totalLoadedState.collectAsState()
 
-//            val checkNeedToDownloadState by prepareServiceViewModel.checkDownloadState.collectAsState()
             //앱로딩이 끝나면, 카메라화면을 보여주도록 한다.
             PrepareServiceScreens.AppLoadingScreen(previewState = previewState,
 
@@ -495,118 +456,13 @@ object MainScreen {
                         popUpTo(route = Page.AppLoading.name) { inclusive = true }
                     }
                 },
-
-//                onMoveToDownload = {
-//                    //여기서 데이터 직렬화를 하고, 값을 전달하기
-//                    navHostController.navigate(
-//                        "${Page.ModelDownloadRequest.name}?checkResponse=${
-//                            Json.encodeToString(
-//                                checkNeedToDownloadState
-//                            )
-//                        }"
-//                    ) {
-//                        popUpTo( Page.AppLoading.name) { inclusive = true }
-//                    }
-//                },
                 onPrepareToLoadCamera = {
                     prepareServiceViewModel.preLoadModel()
                     cameraInit()
                 },
-//                onRequestCheckForDownload = {
-//                    prepareServiceViewModel.requestForCheckDownload()
-//                },
-//                checkNeedToDownloadState = checkNeedToDownloadState,
                 totalLoadedState = { totalLoadedState.value })
-
         }
     }
-
-//    private fun NavGraphBuilder.relatedWithDownload(
-//        routeName: String,
-//        navHostController: NavHostController,
-//        onDoneDownload: () -> Unit
-//    ) {
-//        navigation(startDestination = Page.ModelDownloadRequest.name, route = routeName) {
-//            //다운로드 요청 페이지
-//            composable(
-//                route = "${Page.ModelDownloadRequest.name}?checkResponse={checkResponse}",
-//                arguments = listOf(navArgument("checkResponse") {
-//                    type = createSerializableNavType<CheckResponse>()
-//                })
-//            ) {
-//                val prepareServiceViewModel =
-//                    it.sharedViewModel<PrepareServiceViewModel>(navHostController = navHostController)
-//                val arguments = requireNotNull(it.arguments)
-//                val checkState =
-//                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) arguments.getSerializable(
-//                        "checkResponse"
-//                    ) as? CheckResponse // Bundle에서 Serializable 타입으로 꺼낸다
-//                    else arguments.getSerializable(
-//                        "checkResponse",
-//                        CheckResponse::class.java
-//                    ) // Bundle에서 Serializable 타입으로 꺼낸다
-//                LaunchedEffect(key1 = Unit) {
-//                    prepareServiceViewModel.startToTrackNetWorkState()
-//                }
-//
-//                ModelDownloadScreen.ModelDownloadRequestScreen(
-//                    isCheck = checkState,
-//                    moveToLoading = onDoneDownload,
-//                    moveToDownloadProgress = { type ->
-//                        val isDownload = type == CheckResponse.TYPE_MUST_DOWNLOAD
-//                        navHostController.navigate(
-//                            "${Page.ModelDownloadProgress.name}?isDownload={$isDownload}"
-//                        ) {
-//                            popUpTo(Page.ModelDownloadRequest.name) { inclusive = true }
-//                        }
-//                    },
-//                    requestCheckDownload = {
-//                        prepareServiceViewModel.requestForCheckDownload()
-//                    }
-//                )
-//                DisposableEffect(Unit) {
-//                    onDispose {
-//                        prepareServiceViewModel.clearStates()
-//                    }
-//                }
-//            }
-//            //다운로드 진행 페이지
-//            composable(
-//                route = "${Page.ModelDownloadProgress.name}?isDownload={isDownload}",
-//                arguments = listOf(navArgument("isDownload") {
-//                    type = NavType.BoolType
-//                    defaultValue = true
-//                }),
-//            ) {
-//                val prepareServiceViewModel =
-//                    it.sharedViewModel<PrepareServiceViewModel>(navHostController = navHostController)
-//                val isDownload = it.arguments?.getBoolean("isDownload")
-//                val downloadState by prepareServiceViewModel.downloadState.collectAsStateWithLifecycle()
-//                val networkState by prepareServiceViewModel.networkState.collectAsStateWithLifecycle()
-//                LaunchedEffect(key1 = networkState) {
-//                    if (networkState) prepareServiceViewModel.requestForDownload()
-//                    else Log.e("네트워크 없음 알림.", "없습니다.")
-//                }
-//
-//                downloadState?.run {
-//                    LaunchedEffect(this) {
-//                        if (currentFileIndex + 1 == totalFileCnt && currentBytes == totalBytes) onDoneDownload()//다끝냄을 알림
-//                    }
-//
-//                    ModelDownloadScreen.ModelDownloadProgressScreen(
-//                        isDownload = isDownload,
-//                        downloadedInfo = this,
-//                        onDismissEvent = { context ->
-//                            if (isDownload != null && isDownload.not()) onDoneDownload()
-//                            else (context as Activity).finish()
-//                        })
-//                }
-//
-//            }
-//
-//
-//        }
-
 
 }
 

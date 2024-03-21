@@ -5,8 +5,6 @@ plugins {
     id 'kotlin-kapt'
     id 'com.google.android.gms.oss-licenses-plugin'
 
-    // Add the Google services Gradle plugin
-    id 'com.google.gms.google-services'
 }
 
 android {
@@ -26,11 +24,7 @@ dependencies {
 
     implementation 'com.facebook.android:facebook-android-sdk:[4,5)'
 
-    var firebase_version = "32.5.0"
-    // Import the Firebase BoM
-    implementation platform("com.google.firebase:firebase-bom:$firebase_version")
-    // When using the BoM, don't specify versions in Firebase dependencies
-    implementation 'com.google.firebase:firebase-analytics'
+
 
     //Unit Test
     testImplementation 'junit:junit:4.13.2'

@@ -23,8 +23,5 @@ interface CameraRepository {
     fun setZoomRatio(zoomLevel: Float)
     fun sendCameraSound()
     fun setFocus(meteringPoint: MeteringPoint, durationMilliSeconds: Long)
-
-
-    fun sendUserFeedBackData(eventLogs: ArrayList<CaptureEventData>)
     fun unbindCameraResource(): Boolean
 }

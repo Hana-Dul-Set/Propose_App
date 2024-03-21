@@ -13,6 +13,7 @@ import android.util.SizeF
 import com.hanadulset.pro_poseapp.data.datasource.interfaces.ImageProcessDataSource
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
+import org.opencv.core.Core
 import org.opencv.core.CvException
 import org.opencv.core.CvType
 import org.opencv.core.Mat
@@ -20,6 +21,8 @@ import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfFloat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.MatOfPoint2f
+import org.opencv.core.Scalar
+import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
 import org.opencv.video.Video
 import java.io.ByteArrayOutputStream
@@ -38,11 +41,24 @@ class ImageProcessDataSourceImpl : ImageProcessDataSource {
         // No implementation found ~ 에러 해결
         OpenCVLoader.initDebug()
         val input = Mat()
+
         Utils.bitmapToMat(bitmap, input) // bitmap을 매트릭스로 변환
         Imgproc.cvtColor(input, input, Imgproc.COLOR_RGB2GRAY) //흑백으로 변경
-        Imgproc.Canny(input, input, 50.0, 150.0)
+        val hierarchy = Mat.zeros(input.size(),input.type())
+        val output =Mat.zeros(input.size(),input.type())
+        //Canny Edge Detection을 이용하여, 엣지를 추출함.
+
+//        Imgproc.threshold(input,input,127.0,255.0,Imgproc.THRESH_BINARY)
+//        Core.bitwise_not(input,input)
+        Imgproc.Canny(input, output, 50.0, 150.0)
+        val points = mutableListOf<MatOfPoint>()
+        Imgproc.findContours(input,points, hierarchy, Imgproc.RETR_CCOMP,Imgproc.CHAIN_APPROX_NONE)
+        for(i in points.indices){
+            Imgproc.drawContours(output,points,i, Scalar(255.0,255.0,255.0))
+        }
+
         return bitmap.copy(bitmap.config, true).apply {
-            Utils.matToBitmap(input, this)
+            Utils.matToBitmap(output, this)
         }
     }
 

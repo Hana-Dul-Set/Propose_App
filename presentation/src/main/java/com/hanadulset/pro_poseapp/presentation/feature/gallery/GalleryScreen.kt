@@ -87,7 +87,7 @@ object GalleryScreen {
             contract = ActivityResultContracts.StartActivityForResult(),
             onResult = {
 
-            }) //갤러리를 열 때 사용하는 런처
+            }) //외부 액티비티를 실행할 때 사용하는 런처
 
         val horizontalPagerState = rememberPagerState(
             initialPage = 0,
@@ -96,6 +96,13 @@ object GalleryScreen {
         val localDensity = LocalDensity.current
         val fontSize = 20.sp
 
+        fun shareImage(imgUri: Uri?) {
+            val intent = Intent(Intent.ACTION_SEND) //전송의 의도 전달
+            // 이미지 uri
+            intent.type = ("image/*")
+            intent.putExtra(Intent.EXTRA_STREAM, imgUri)
+            galleryOpenLauncher.launch(Intent.createChooser(intent, "이미지 공유"))
+        }
 
         //갤러리 화면 틀 구성
         Box( //Parent
@@ -115,14 +122,12 @@ object GalleryScreen {
                 ImageContent(
                     modifier = Modifier
                         .fillMaxSize(),
-                    imgUri = if (imageList.isNotEmpty()) imageList[it].dataUri!! else null,
+                    imgUri = if (imageList.isNotEmpty()) imageList[it].dataUri else null,
                     imgSize = screenWidth,
                     onClickEvent = {
                         showMenuBarState.value = showMenuBarState.value.not()
                     }
                 )
-
-
             }
             //Child 1
             //만약 메뉴화면이 존재해야 하는 경우
@@ -191,7 +196,8 @@ object GalleryScreen {
                             .height(screenHeight / 6)
                             .navigationBarsPadding()
                             .background(Color.Black.copy(alpha = 0.3F)),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceAround
                     ) {
                         IconButton(
                             onClick = {
@@ -199,9 +205,7 @@ object GalleryScreen {
                                     onDeleteImage(horizontalPagerState.currentPage)
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(30.dp),
+                            modifier = Modifier.height(30.dp),
                         ) {
                             Icon(
                                 tint = Color.White,
@@ -209,11 +213,27 @@ object GalleryScreen {
                                 contentDescription = "지우기"
                             )
                         }
+                        IconButton(
+                            onClick = {
+                                //이미지 공유 관련 메소드 담기
+                                shareImage(imageList[horizontalPagerState.currentPage].dataUri)
+                            },
+                            modifier = Modifier
+                                .height(30.dp),
+                        ) {
+                            Icon(
+                                tint = Color.White,
+                                painter = painterResource(id = R.drawable.icon_delete),
+                                contentDescription = "이미지 공유"
+                            )
+                        }
                     }
                 }
             }
         }
+
     }
+
 
     private fun openGallery(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
 
@@ -231,7 +251,6 @@ object GalleryScreen {
         launcher.launch(
             Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//            intent
         )
     }
 
@@ -251,11 +270,9 @@ object GalleryScreen {
         Image(
             modifier = modifier.clickable(
                 indication = null,
-                interactionSource = MutableInteractionSource()
-            ) {
-                onClickEvent()
-
-            },
+                interactionSource = MutableInteractionSource(),
+                onClick = onClickEvent
+            ),
             painter = imagePainter,
             contentScale = ContentScale.Fit,
             contentDescription = "저장된 이미지",

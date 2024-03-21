@@ -3,7 +3,6 @@ package com.hanadulset.pro_poseapp.data.datasource.feature
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
 import android.util.SizeF
 import androidx.core.net.toUri
 import com.hanadulset.pro_poseapp.data.datasource.interfaces.PoseDataSource
@@ -34,34 +33,15 @@ import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTimedValue
 
-class PoseDataSourceImpl(private val context: Context) : PoseDataSource {
+class PoseDataSourceImpl(private val applicationContext: Context) : PoseDataSource {
 
+    private lateinit var centroid: MutableList<List<Double>>
+    private lateinit var poseRanks:List<List<PoseData>>
 
-    //centroid 값
-    private val centroid by lazy {
-        context.assets.open("centroids.csv").use { stream ->
-            val resMutableList = mutableListOf<List<Double>>()
-            CSVReader(InputStreamReader(stream)).forEach {
-                //앞에 라벨 번호가 있는 것들만 데이터를 가져와보자
-                if (!it.contains("label")) {
-                    val tmpList = mutableListOf<Double>()
-                    val length = it.size
-                    tmpList.add(it[1].substring(1).toDouble())
-                    for (i in 2 until length - 1) tmpList.add(it[i].toDouble())
-                    tmpList.add(
-                        it[length - 1].substring(0 until it[length - 1].length - 1).toDouble()
-                    )
-                    resMutableList.add(tmpList)
-                }
-            }
-            resMutableList
-        }
-    }
-    private val poseRanks by lazy {
+    private fun initPoseRankList(): List<List<PoseData>> {
         val poseDataList = mutableListOf<List<PoseData>>()
-        val rankList = context.assets.open("pose_ranks.csv").use { stream ->
+        val rankList = applicationContext.assets.open("pose_ranks.csv").use { stream ->
             val resMutableList = mutableListOf<List<Double>>()
             CSVReader(InputStreamReader(stream)).forEach { strings ->
                 if (strings[1].equals("pose_ids").not()) {
@@ -75,7 +55,7 @@ class PoseDataSourceImpl(private val context: Context) : PoseDataSource {
         }
 
         //저장된 이미지와 데이터를 매핑시킨다.
-        val imageDataList = context.assets.open("image_datas.csv").use { stream ->
+        val imageDataList: MutableList<PoseData> = applicationContext.assets.open("image_datas.csv").use { stream ->
             val resultList = mutableListOf<PoseData>()
             val imageRes = loadPoseImages()
             CSVReaderBuilder(InputStreamReader(stream)).withCSVParser(
@@ -114,7 +94,7 @@ class PoseDataSourceImpl(private val context: Context) : PoseDataSource {
             }
             poseDataList.add(tmp)
         }
-        poseDataList.toList()
+        return poseDataList.toList()
     }
 
 
@@ -145,9 +125,28 @@ class PoseDataSourceImpl(private val context: Context) : PoseDataSource {
     }
 
     override fun preparePoseData() {
-        poseRanks
-        centroid
+        poseRanks = initPoseRankList()
+        centroid = initCentroidValue()
     }
+
+    private fun initCentroidValue(): MutableList<List<Double>> =
+        applicationContext.assets.open("centroids.csv").use { stream ->
+            val resMutableList = mutableListOf<List<Double>>()
+            CSVReader(InputStreamReader(stream)).forEach {
+                //앞에 라벨 번호가 있는 것들만 데이터를 가져와보자
+                if (!it.contains("label")) {
+                    val tmpList = mutableListOf<Double>()
+                    val length = it.size
+                    tmpList.add(it[1].substring(1).toDouble())
+                    for (i in 2 until length - 1) tmpList.add(it[i].toDouble())
+                    tmpList.add(
+                        it[length - 1].substring(0 until it[length - 1].length - 1).toDouble()
+                    )
+                    resMutableList.add(tmpList)
+                }
+            }
+            resMutableList
+        }
 
 
     override suspend fun preProcessing(image: Bitmap): Mat = withContext(Dispatchers.Default) {
@@ -229,7 +228,6 @@ class PoseDataSourceImpl(private val context: Context) : PoseDataSource {
 
         val diffSquaredSum = a.zip(b).sumOf { (aSublist, bSublist) ->
             require(aSublist.size == bSublist.size) { "Sublists must have the same size." }
-
             aSublist.zip(bSublist).sumOf { (aVal, bVal) ->
                 val diff = aVal - bVal
                 diff * diff
@@ -394,8 +392,16 @@ class PoseDataSourceImpl(private val context: Context) : PoseDataSource {
             for (row in 0 until magnitude.rows()) {
                 for (col in 0 until magnitude.cols()) {
                     if (magnitude[row, col][0] != 0.0) {
-                        resMagnitude.put(row, col, resMagnitude.get(row, col)[0] + magnitude[row, col][0])
-                        resOrientation.put(row, col, resOrientation[row, col][0] + orientation[row, col][0])
+                        resMagnitude.put(
+                            row,
+                            col,
+                            resMagnitude.get(row, col)[0] + magnitude[row, col][0]
+                        )
+                        resOrientation.put(
+                            row,
+                            col,
+                            resOrientation[row, col][0] + orientation[row, col][0]
+                        )
                         cnt.put(row, col, cnt[row, col][0] + 1)
                     }
                 }
@@ -497,16 +503,12 @@ class PoseDataSourceImpl(private val context: Context) : PoseDataSource {
         return angleMap.toList()
     }
 
-    private suspend fun <A, B> Iterable<A>.asyncMap(f: suspend (A) -> B): Unit = coroutineScope {
-        map { async { f(it) } }.awaitAll()
-    }
-
     private fun loadPoseImages(): List<Uri> {
-        val file = File(context.dataDir, "/silhouettes")
+        val file = File(applicationContext.dataDir, "/silhouettes")
 //        if (file.exists().not()) {
-        val tmpFile = File(context.dataDir, SILHOUETTE_IMAGE_ZIP)
+        val tmpFile = File(applicationContext.dataDir, SILHOUETTE_IMAGE_ZIP)
         //데이터를 옮김
-        context.assets.open(SILHOUETTE_IMAGE_ZIP).use { `is` ->
+        applicationContext.assets.open(SILHOUETTE_IMAGE_ZIP).use { `is` ->
             FileOutputStream(tmpFile).use { os ->
                 val buffer = ByteArray(4 * 1024)
                 var read: Int

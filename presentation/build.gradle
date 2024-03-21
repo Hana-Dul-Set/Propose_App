@@ -4,8 +4,8 @@ plugins {
     id "androidx.navigation.safeargs" //send args by Navigation
     id 'com.google.dagger.hilt.android'
     id 'kotlin-kapt'
-    // Add the Google services Gradle plugin
-    id 'com.google.gms.google-services'
+//    // Add the Google services Gradle plugin
+//    id 'com.google.gms.google-services'
 }
 
 android {

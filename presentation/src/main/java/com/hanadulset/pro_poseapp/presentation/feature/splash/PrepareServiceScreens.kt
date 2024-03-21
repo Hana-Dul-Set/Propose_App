@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -42,21 +41,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.google.firebase.Firebase
-import com.google.firebase.remoteconfig.get
-import com.google.firebase.remoteconfig.remoteConfig
-import com.google.firebase.remoteconfig.remoteConfigSettings
 import com.hanadulset.pro_poseapp.presentation.R
 import com.hanadulset.pro_poseapp.presentation.component.LocalColors
 import com.hanadulset.pro_poseapp.presentation.component.LocalTypography
 import com.hanadulset.pro_poseapp.presentation.component.UIComponents
 import com.hanadulset.pro_poseapp.presentation.core.CustomDialog
-import com.hanadulset.pro_poseapp.utils.CheckResponse
 import com.hanadulset.pro_poseapp.utils.camera.CameraState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.tasks.await
-import org.json.JSONObject
-import org.json.JSONTokener
 
 object PrepareServiceScreens {
     private const val APP_NAME = "프로_포즈"
@@ -91,38 +82,33 @@ object PrepareServiceScreens {
                 if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) versionCode.toLong()
                 else longVersionCode
             }
-            val remoteConfig = Firebase.remoteConfig.apply {
-                setConfigSettingsAsync(
-                    remoteConfigSettings { minimumFetchIntervalInSeconds = 0 }
-                )
-                setDefaultsAsync(mapOf(appVersion to "0.0.0"))
-            }
-            try {
-                remoteConfig.fetchAndActivate().await()
-                val appInfo =
-                    JSONTokener(remoteConfig[appVersion].asString()).nextValue() as JSONObject
-                if ((appInfo["version_code"] as Int).toLong() > currentVersionCode) { // 업데이트가 필요한 경우
-                    showUpdateDialog.value =
-                        mapOf(
-                            Pair("mustToUpdate", (appInfo["mustToUpdate"] as Boolean).toString()),
-                            Pair("updateRequestText", appInfo["updateRequestText"] as String),
-                            Pair("version_name", appInfo["version_name"] as String)
-                        )
-                }
-            } catch (e: Exception) {
-                Log.e("Error: ", "Cannot load appInfo data. ${e.message}")
-            }
+//            val remoteConfig = Firebase.remoteConfig.apply {
+//                setConfigSettingsAsync(
+//                    remoteConfigSettings { minimumFetchIntervalInSeconds = 0 }
+//                )
+//                setDefaultsAsync(mapOf(appVersion to "0.0.0"))
+//            }
+//            try {
+//                remoteConfig.fetchAndActivate().await()
+//                val appInfo =
+//                    JSONTokener(remoteConfig[appVersion].asString()).nextValue() as JSONObject
+//                if ((appInfo["version_code"] as Int).toLong() > currentVersionCode) { // 업데이트가 필요한 경우
+//                    showUpdateDialog.value =
+//                        mapOf(
+//                            Pair("mustToUpdate", (appInfo["mustToUpdate"] as Boolean).toString()),
+//                            Pair("updateRequestText", appInfo["updateRequestText"] as String),
+//                            Pair("version_name", appInfo["version_name"] as String)
+//                        )
+//                }
+//            } catch (e: Exception) {
+//                Log.e("Error: ", "Cannot load appInfo data. ${e.message}")
+//            }
         }
 
         LaunchedEffect(key1 = Unit) {
-            checkForAppUpdate(
-                localContext = localContext
-            )
+            checkForAppUpdate(localContext = localContext)
             if (showUpdateDialog.value == null) onCheckForMoveToNext()
         }
-
-
-
 
 
 
@@ -150,11 +136,7 @@ object PrepareServiceScreens {
             )
             val style = LocalTypography.current
             val color = LocalColors.current
-            val positionOfTitle = remember {
-                mutableStateOf(Offset.Zero)
-            }
-
-
+            val positionOfTitle = remember { mutableStateOf(Offset.Zero) }
 
             Column(
                 modifier = Modifier
@@ -225,9 +207,7 @@ object PrepareServiceScreens {
                             }
                         },
                         onDismissRequest = {
-                            if (showUpdateDialog.value!!["mustToUpdate"]!!.toBoolean()
-                                    .not()
-                            ) onCheckForMoveToNext()
+                            if (showUpdateDialog.value!!["mustToUpdate"]!!.toBoolean().not()) onCheckForMoveToNext()
                             else (localContext as Activity).finishAffinity()
                         })
                 }

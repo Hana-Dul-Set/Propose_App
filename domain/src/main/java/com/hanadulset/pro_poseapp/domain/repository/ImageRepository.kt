@@ -18,8 +18,6 @@ interface ImageRepository {
 
     fun getFixedScreen(backgroundBitmap: Bitmap): Bitmap // 고정 화면을 보여줌
     suspend fun getLatestImage(): Uri?
-    suspend fun downloadResources(): Flow<DownloadState>
-    suspend fun checkForDownloadResources(): CheckResponse
     suspend fun preRunModel(): Boolean
     fun getPoseFromImage(uri: Uri?): Bitmap?
     suspend fun loadAllCapturedImages(): List<ImageResult>

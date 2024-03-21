@@ -5,40 +5,28 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.Firebase
-import com.google.firebase.analytics.analytics
-import com.google.firebase.analytics.logEvent
+import com.hanadulset.pro_poseapp.presentation.component.ProPoseTheme
 import com.hanadulset.pro_poseapp.presentation.core.MainScreen
 import com.hanadulset.pro_poseapp.presentation.feature.camera.CameraViewModel
 import com.hanadulset.pro_poseapp.presentation.feature.gallery.GalleryViewModel
 import com.hanadulset.pro_poseapp.presentation.feature.splash.PrepareServiceViewModel
-import com.hanadulset.pro_poseapp.presentation.component.ProPoseTheme
 import com.hanadulset.pro_poseapp.utils.eventlog.AnalyticsManager
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private val cameraViewModel: CameraViewModel by viewModels()
-    private val prepareServiceViewModel: PrepareServiceViewModel by viewModels()
-    private val galleryViewModel: GalleryViewModel by viewModels()
     private val analyticsManager by lazy { AnalyticsManager(this.contentResolver) }
 
     //전체화면 적용
@@ -86,16 +74,12 @@ class MainActivity : AppCompatActivity() {
                         .fillMaxSize()
                         .navigationBarsPadding() //시스템의 네비게이션 높이에 맞게 패딩을 적용할 수 있게 함.
                     , navController,
-                    cameraViewModel = cameraViewModel,
-                    prepareServiceViewModel = prepareServiceViewModel,
-                    galleryViewModel = galleryViewModel
                 )
             }
         }
 
     }
 
-    @SuppressLint("HardwareIds")
     override fun onStop() {
         super.onStop()
         //앱 종료 이벤트 발생
