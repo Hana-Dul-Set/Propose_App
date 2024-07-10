@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
 
 //기기 내의 사용자 설정 및 사용자의 로그를 정리하고 기록하는 데이터 소스
 @SuppressLint("HardwareIds")
-class UserDataSourceImpl constructor(private val applicationContext: Context) : UserDataSource {
+class UserDataSourceImpl(private val applicationContext: Context) : UserDataSource {
 
     override suspend fun saveUserSet(userSet: UserSet) {
         applicationContext.dataStore.edit { preferences ->

@@ -1,11 +1,8 @@
 package com.hanadulset.pro_poseapp.data.datasource
 
-import android.annotation.SuppressLint
 import android.content.Context
-import androidx.annotation.OptIn
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ExperimentalZeroShutterLag
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.Analyzer
@@ -25,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.opencv.android.OpenCVLoader
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -33,20 +29,18 @@ import kotlin.coroutines.suspendCoroutine
 
 
 class CameraDataSourceImpl(private val context: Context) : CameraDataSource {
-
-    private var preview: Preview? = null
+    private lateinit var preview: Preview
     private var imageCapture: ImageCapture? = null
-    private var imageAnalysis: ImageAnalysis? = null
-    private val executor by lazy {
-        ContextCompat.getMainExecutor(context)
-    }
+    private lateinit var imageAnalysis: ImageAnalysis
+    private val executor by lazy { ContextCompat.getMainExecutor(context) }
 
     private var isOPENCVInit: Boolean = false
 
-    private var camera: Camera? = null
-    private var cameraProvider: ProcessCameraProvider? = null
-    private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
-
+    private lateinit var camera: Camera
+    private lateinit var cameraProvider: ProcessCameraProvider
+    private val cameraProviderFuture by lazy {
+        ProcessCameraProvider.getInstance(context)
+    }
 
     override suspend fun initCamera(
         lifecycleOwner: LifecycleOwner,
@@ -55,49 +49,85 @@ class CameraDataSourceImpl(private val context: Context) : CameraDataSource {
         previewRotation: Int,
         analyzer: Analyzer
     ): CameraState = suspendCoroutine { cont ->
-        if (!isOPENCVInit) isOPENCVInit = OpenCVLoader.initDebug()
-        if (cameraProviderFuture == null && cameraProvider == null) {
-            cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-            cameraProviderFuture!!.addListener({
-                try {
-                    cameraProvider = cameraProviderFuture!!.get()
-                } catch (e: InterruptedException) {
-                    cont.resume(CameraState(CAMERA_INIT_ERROR, e, e.message))
-                } catch (e: ExecutionException) {
-                    cont.resume(CameraState(CAMERA_INIT_ERROR, e, e.message))
-                }
-                if (bindCameraUseCases(
-                        surfaceProvider = surfaceProvider,
-                        lifecycleOwner = lifecycleOwner,
-                        analyzer = analyzer,
-                        aspectRatio = previewRotation,
-                        previewRotation = aspectRatio,
-                    )
-                ) cont.resume(
-                    CameraState(
-                        CAMERA_INIT_COMPLETE,
-                        imageAnalyzerResolution = imageAnalysis!!.resolutionInfo!!.resolution,
-                    )
-                )
-            }, executor)
-        } else {
-            if (bindCameraUseCases(
-                    surfaceProvider = surfaceProvider,
-                    previewRotation = previewRotation,
-                    lifecycleOwner = lifecycleOwner,
-                    analyzer = analyzer,
-                    aspectRatio = aspectRatio
+        if (!isOPENCVInit) isOPENCVInit = OpenCVLoader.initLocal()
+
+        prepareCamera(
+            lifecycleOwner,
+            surfaceProvider,
+            aspectRatio,
+            previewRotation,
+            analyzer
+        ).onSuccess {
+            cont.resume(
+                CameraState(
+                    CAMERA_INIT_COMPLETE,
+                    imageAnalyzerResolution = imageAnalysis.resolutionInfo?.resolution
                 )
             )
-                cont.resume(
-                    CameraState(
-                        CAMERA_INIT_COMPLETE,
-                        imageAnalyzerResolution = imageAnalysis!!.resolutionInfo!!.resolution,
-
-                        )
-                )
+        }.onFailure {
+            cont.resume(
+                CameraState(CAMERA_INIT_ERROR, it.cause as? Exception, it.message)
+            )
         }
 
+    }
+
+    private fun prepareCamera(
+        lifecycleOwner: LifecycleOwner,
+        surfaceProvider: Preview.SurfaceProvider,
+        aspectRatio: Int,
+        previewRotation: Int,
+        analyzer: Analyzer
+    ) = runCatching {
+        cameraProvider = cameraProviderFuture.get()
+        bindCameraUseCases(
+            lifecycleOwner,
+            surfaceProvider,
+            aspectRatio,
+            previewRotation,
+            analyzer
+        )
+    }
+
+
+    private fun bindCameraUseCases(
+        lifecycleOwner: LifecycleOwner,
+        surfaceProvider: Preview.SurfaceProvider,
+        previewRotation: Int,
+        aspectRatio: Int,
+        analyzer: Analyzer
+    ) = runCatching {
+        val cameraSelector = CameraSelector.Builder().requireLensFacing(
+            CameraSelector.LENS_FACING_BACK
+        ).build()
+
+        preview = Preview.Builder()
+            .setTargetAspectRatio(aspectRatio)
+            .setTargetRotation(previewRotation)
+            .build()
+
+
+        imageCapture =
+            ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setTargetAspectRatio(aspectRatio)
+                .setTargetRotation(previewRotation)
+                .build()
+
+        imageAnalysis = ImageAnalysis.Builder()
+            .setTargetAspectRatio(aspectRatio)
+            .setTargetRotation(previewRotation)
+            .build().apply { setAnalyzer(executor, analyzer) }
+
+        cameraProvider.unbindAll()
+        camera = cameraProvider.bindToLifecycle(
+            lifecycleOwner,
+            cameraSelector,
+            preview,
+            imageCapture,
+            imageAnalysis
+        )
+        preview.setSurfaceProvider(surfaceProvider)
     }
 
 
@@ -124,65 +154,6 @@ class CameraDataSourceImpl(private val context: Context) : CameraDataSource {
         }
 
 
-    }
-
-
-    @OptIn(ExperimentalZeroShutterLag::class)
-    @SuppressLint("RestrictedApi")
-    private fun bindCameraUseCases(
-        lifecycleOwner: LifecycleOwner,
-        surfaceProvider: Preview.SurfaceProvider,
-        previewRotation: Int,
-        aspectRatio: Int,
-        analyzer: Analyzer
-    ): Boolean {
-        val cameraSelector = CameraSelector.Builder().requireLensFacing(
-            CameraSelector.LENS_FACING_BACK
-        ).build()
-
-        preview = Preview.Builder()
-            .setTargetAspectRatio(aspectRatio)
-            .setTargetRotation(previewRotation)
-            .build()
-
-
-        imageCapture =
-            ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .setTargetAspectRatio(aspectRatio)
-                .setTargetRotation(previewRotation)
-                .build()
-
-        imageAnalysis =
-            ImageAnalysis.Builder()
-                .setTargetAspectRatio(aspectRatio)
-                .setTargetRotation(previewRotation)
-                .build().apply {
-                    setAnalyzer(
-                        executor, analyzer
-                    )
-                }
-
-
-        try {
-            cameraProvider!!.unbindAll()
-            // A variable number of use-cases can be passed here -
-            // camera provides access to CameraControl & CameraInfo
-            camera = cameraProvider!!.bindToLifecycle(
-                lifecycleOwner, // Use the provided lifecycle owner
-                cameraSelector, preview, imageCapture, imageAnalysis
-            )
-            // Attach the viewfinder's surface provider to preview use case
-            preview?.setSurfaceProvider(surfaceProvider)
-
-            return true
-            // Now you have the CameraControl instance if you need it
-        } catch (exc: Exception) {
-            // Handle camera initialization error
-//            Log.e("Error on Init Camera", "에러입니다", exc)
-            return false
-
-        }
     }
 
     fun unbindCameraResources(): Boolean {

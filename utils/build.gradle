@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.library'
-    id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
     id 'org.jetbrains.kotlin.android'
     id 'kotlinx-serialization'
@@ -21,8 +20,8 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     //hilt
-    implementation "com.google.dagger:hilt-android:2.44"
-    kapt "com.google.dagger:hilt-compiler:2.44"
+    implementation "com.google.dagger:hilt-android:2.48"
+    ksp "com.google.dagger:hilt-compiler:2.48"
 
     implementation "net.lingala.zip4j:zip4j:2.11.5"
 

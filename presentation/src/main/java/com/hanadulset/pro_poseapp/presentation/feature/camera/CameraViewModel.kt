@@ -147,13 +147,14 @@ class CameraViewModel @Inject constructor(
         _previewState.value =
             CameraState(cameraStateId = CameraState.CAMERA_INIT_ON_PROCESS) // OnProgress
         viewModelScope.launch {
-            _previewState.value = bindCameraUseCase(
+            val res = bindCameraUseCase(
                 lifecycleOwner,
                 surfaceProvider,
                 aspectRatio = aspectRatioState.value.aspectRatioType,
                 analyzer = imageAnalyzer,
                 previewRotation = previewRotation
             )
+            _previewState.value = res
         }
     }
 

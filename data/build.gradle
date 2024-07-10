@@ -3,6 +3,7 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.kapt'
     id 'com.google.dagger.hilt.android'
 //    // Add the Google services Gradle plugin
 //    id 'com.google.gms.google-services'
@@ -26,8 +27,8 @@ dependencies {
     implementation project(':opencv')
 
     //hilt
-    implementation "com.google.dagger:hilt-android:2.44"
-    ksp "com.google.dagger:hilt-compiler:2.44"
+    implementation "com.google.dagger:hilt-android:2.48"
+    ksp "com.google.dagger:hilt-compiler:2.48"
     //pytorch를 이용하기 위한 gradle dependency
     implementation 'org.pytorch:pytorch_android_lite:1.13.1'
     implementation 'org.pytorch:pytorch_android_torchvision_lite:1.13.1'

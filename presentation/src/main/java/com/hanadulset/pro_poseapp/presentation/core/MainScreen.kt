@@ -282,7 +282,9 @@ object MainScreen {
                         Screen(cameraViewModel,
                             previewView = previewView,
                             onClickSettingBtnEvent = {
-                                navHostController.navigate(route = Page.Setting.name) {}
+                                navHostController.navigate(route = Page.Setting.name) {
+                                    launchSingleTop = true //Avoid launch same page
+                                }
                             },
                             onClickGalleryBtn = {
                                 navHostController.navigate(route = Page.Images.name) {}
