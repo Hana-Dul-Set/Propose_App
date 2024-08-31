@@ -17,14 +17,14 @@ Pro_Pose는 Pro와 Pose의 합성어로 "인물 사진 포즈의 프로"라는 �
 
 | <b>포즈 추천</b>| <b>구도 가이드</b> |
   |---|---|
-  | <img src="./readme_sources/pose_recommend.gif" width ="200"/>|<img src="./readme_sources/guide_point.gif" width ="200"/> |
+  | <img src="./readme_sources/pose_recommend.gif" width ="200"/>|<img src="./readme_sources/guide_point.gif" width ="200" /> |
   |AI가 화면에 비치는 카메라 화면을 분석하여, 적합한 포즈 이미지를 추천해줍니다. |AI가 화면에 비치는 카메라 화면을 분석하여, 안정적인 사진의 구도에 대한 가이드를 제공합니다.|
 
   
 
 | <b>잠금</b>| <b>포즈 따오기</b> |
   |---|---| 
-  | <img src="./readme_sources/pose_from.png" width ="300"/> | <img src="./readme_sources/lock.png" width ="500"/> |
+  | <img src="./readme_sources/lock.png" width ="400"/> | <img src="./readme_sources/pose_from.png" width ="400"/>|
   | <li> 사용자가 사진을 찍힌다는 상황을 고려 </li> <li> 추천 받은 구도와 포즈를 외곽선으로 추출</li> <li> 촬영해주는 사람이 어떤 식으로 찍어야 할 지 쉽게 전달할 수 있도록 도와줍니다.  |  <li> SNS 등에서 찾은 포즈나 사진 구도를 따라하고 싶은 경우 </li> <li> 해당 이미지의 외곽선을 검출 </li> <li>검출한 이미지를 현재 카메라 화면에 겹쳐보이게 하여, 쉽게 사용자가 따라서 찍을 수 있도록 도와줍니다.</li> ||
 
 
